@@ -359,7 +359,7 @@ function submitAndFinish() {
   var btn = document.getElementById('btn-next');
   if (btn) { btn.disabled = true; btn.textContent = 'Отправка…'; }
 
-  var record = { token: TOKEN || ('anon_'+Date.now()), name: candidateName, email: candidateEmail, answers: answers };
+  var record = { token: TOKEN || ('anon_'+Date.now()), name: candidateName, email: candidateEmail, grade: 'pif', answers: answers };
 
   sbInsert('submissions', record)
     .then(function() {
