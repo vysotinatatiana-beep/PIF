@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Оценка потенциала</title>
+<style>
+:root{--bg:#0e1117;--surface:#161b27;--card:#1e2535;--border:#2c3450;--muted:#3a4260;--fog:#7280a0;--silver:#a8b4cc;--snow:#dde4f0;--white:#fff;--blue:#4b7cf3;--blue-dim:rgba(75,124,243,.1);--blue-glow:rgba(75,124,243,.25);--violet:#7c5cdb;--green:#18b070;--amber:#e8a020;--rose:#e04060;--r:10px;--rs:6px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--snow);min-height:100vh;font-size:15px;line-height:1.6}
+.wrap{max-width:780px;margin:0 auto;padding:0 20px 100px}
+.brand{display:flex;align-items:center;gap:10px;padding:28px 0 0}
+.brand-pip{width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.brand-txt{font-size:.7rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--fog)}
+
+#scr-identity{padding:48px 0 32px}
+.id-h{font-size:clamp(1.6rem,4.5vw,2.3rem);font-weight:800;line-height:1.2;color:var(--white);margin:24px 0 14px}
+.id-sub{font-size:.92rem;color:var(--silver);max-width:540px;line-height:1.7;margin-bottom:32px}
+.field-group{margin-bottom:18px}
+.field-label{font-size:.78rem;color:var(--fog);margin-bottom:7px;display:block}
+.field-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 16px;font-size:.92rem;color:var(--snow)}
+.field-input:focus{outline:none;border-color:var(--blue)}
+.consent-row{display:flex;align-items:flex-start;gap:10px;margin:22px 0 28px;font-size:.78rem;color:var(--fog);line-height:1.5}
+.consent-row input{margin-top:3px;flex-shrink:0}
+.id-err{font-size:.78rem;color:var(--rose);margin-top:8px;display:none}
+.start-btn{background:var(--blue);color:var(--white);border:none;cursor:pointer;padding:15px 40px;border-radius:40px;font-size:.95rem;font-weight:700;box-shadow:0 4px 20px var(--blue-glow)}
+.start-btn:hover{opacity:.88}
+.callout{background:var(--blue-dim);border:1px solid rgba(75,124,243,.2);border-radius:var(--rs);padding:14px 18px;font-size:.82rem;color:var(--silver);line-height:1.65;margin-bottom:28px}
+.callout strong{color:var(--snow)}
+.block-overview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.bo-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.bo-card .t{font-size:.62rem;color:var(--fog);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.bo-card .n{font-size:.86rem;font-weight:700;color:var(--snow)}
+
+#scr-survey{display:none;padding-top:28px}
+.prog-bar-wrap{margin-bottom:22px}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-sec{font-size:.72rem;color:var(--fog);letter-spacing:1px;text-transform:uppercase}
+.prog-ct{font-size:.72rem;color:var(--fog)}
+.prog-track{height:2px;background:var(--muted);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:var(--blue);border-radius:1px;transition:width .4s ease}
+.sec-badge{display:inline-flex;align-items:center;gap:8px;background:var(--blue-dim);border:1px solid rgba(75,124,243,.25);border-radius:20px;padding:4px 14px;font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.sec-desc{font-size:.82rem;color:var(--fog);margin-bottom:20px;line-height:1.55}
+
+.timer-box{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--card);border:2px solid var(--violet);border-radius:var(--r);padding:14px;margin-bottom:18px}
+.timer-num{font-size:1.8rem;font-weight:800;color:var(--violet);min-width:50px;text-align:center}
+.timer-num.urgent{color:var(--rose)}
+.timer-label{font-size:.75rem;color:var(--fog)}
+
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:10px}
+.qcard.answered{border-color:var(--muted)}
+.qcard.timeout{border-color:var(--rose)}
+.qidx{font-size:.65rem;color:var(--muted);margin-bottom:8px}
+.qtext{font-size:1rem;color:var(--snow);line-height:1.6;margin-bottom:18px;font-weight:600}
+.scenario{background:var(--surface);border-left:3px solid var(--violet);border-radius:0 var(--rs) var(--rs) 0;padding:12px 14px;margin-bottom:14px;font-size:.83rem;color:var(--silver);line-height:1.6}
+.scen-tag{font-size:.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--violet);font-weight:700;margin-bottom:5px}
+
+.opt-grid{display:flex;flex-direction:column;gap:8px}
+.opt-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:13px 16px;cursor:pointer;transition:all .15s;font-size:.9rem;color:var(--silver)}
+.opt-card:hover{border-color:var(--blue);background:var(--blue-dim)}
+.opt-card.sel{border-color:var(--blue);background:var(--blue-dim);color:var(--snow)}
+.opt-card.disabled{opacity:.4;cursor:default;pointer-events:none}
+
+.likert-row{display:flex;justify-content:space-between;gap:5px}
+.l-opt input{display:none}
+.l-dot{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:600;color:var(--fog);cursor:pointer;background:var(--surface)}
+.l-opt:hover .l-dot{border-color:var(--blue);color:var(--snow)}
+.l-opt input:checked~.l-dot{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.anchors{display:flex;justify-content:space-between;margin-top:6px}
+.anch{font-size:.64rem;color:var(--muted);max-width:100px}
+.anch.r{text-align:right}
+
+.fc-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fc-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .18s;position:relative}
+.fc-card:hover{border-color:var(--blue);background:var(--blue-dim)}
+.fc-card.sel{border-color:var(--blue);background:var(--blue-dim)}
+.fc-card.sel::after{content:'✓';position:absolute;top:9px;right:11px;color:var(--blue);font-weight:700}
+.fc-letter{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--fog);margin-bottom:5px}
+.fc-text{font-size:.86rem;color:var(--silver);line-height:1.45}
+.fc-lbl{font-size:.76rem;color:var(--fog);text-align:center;margin-bottom:14px}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+.nav-btn{background:transparent;border:1.5px solid var(--muted);color:var(--silver);padding:11px 28px;border-radius:40px;font-size:.87rem;font-weight:600;cursor:pointer}
+.nav-btn:hover{border-color:var(--snow);color:var(--white)}
+.nav-btn.pr{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.err{font-size:.77rem;color:var(--rose);text-align:center;margin-top:10px;display:none}
+
+#scr-done{display:none;padding:80px 0;text-align:center}
+.done-icon{width:64px;height:64px;border-radius:50%;background:var(--blue-dim);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 24px;color:var(--blue)}
+.done-h{font-size:1.5rem;font-weight:800;color:var(--white);margin-bottom:12px}
+.done-sub{font-size:.9rem;color:var(--silver);max-width:440px;margin:0 auto;line-height:1.7}
+
+@media(max-width:520px){.fc-pair,.block-overview{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="brand"><div class="brand-pip"></div><span class="brand-txt">Оценка потенциала</span></div>
+
+<div id="scr-identity">
+  <h1 class="id-h">Прежде чем начать</h1>
+  <p class="id-sub">Этот тест состоит из двух частей: заданий на анализ информации (с ограничением по времени на часть вопросов) и вопросов о ваших рабочих предпочтениях. Займёт около 20 минут.</p>
+
+  <div class="block-overview">
+    <div class="bo-card"><div class="t">Блок 1</div><div class="n">Анализ — тест способностей</div></div>
+    <div class="bo-card"><div class="t">Блок 2</div><div class="n">Коммуникация — самооценка</div></div>
+    <div class="bo-card"><div class="t">Блок 3</div><div class="n">Изменения — самооценка</div></div>
+    <div class="bo-card"><div class="t">Блок 4</div><div class="n">Драйв — самооценка</div></div>
+  </div>
+
+  <div class="callout"><strong>Важно про блок «Анализ».</strong> Часть заданий имеет жёсткий лимит времени — таймер будет виден на экране. Это тест способностей: здесь есть правильные и неправильные ответы. В остальных блоках правильных ответов нет — там важна честность, а не "правильный" вариант.</div>
+
+  <div class="field-group"><label class="field-label">Ваше имя</label><input class="field-input" id="inp-name" type="text" placeholder="Иван Иванов"></div>
+  <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="inp-email" type="email" placeholder="ivan@example.com"></div>
+  <div class="consent-row"><input type="checkbox" id="inp-consent"><label for="inp-consent">Я согласен(на) на обработку результатов теста в целях оценки кандидата для данной вакансии.</label></div>
+  <div class="id-err" id="id-err">Заполните имя, email и подтвердите согласие.</div>
+  <button class="start-btn" onclick="startSurvey()">Начать тест →</button>
+</div>
+
+<div id="scr-survey">
+  <div class="prog-bar-wrap">
+    <div class="prog-meta"><span class="prog-sec" id="prog-sec">Раздел 1 из 8</span><span class="prog-ct" id="prog-ct"></span></div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div id="sec-body"></div>
+  <div class="nav-row">
+    <button class="nav-btn" id="btn-back" onclick="goBack()">← Назад</button>
+    <button class="nav-btn pr" id="btn-next" onclick="goNext()">Далее →</button>
+  </div>
+  <div class="err" id="err-msg">Пожалуйста, ответьте на все вопросы раздела</div>
+</div>
+
+<div id="scr-done">
+  <div class="done-icon">✓</div>
+  <div class="done-h">Спасибо!</div>
+  <p class="done-sub">Ваши результаты получены и переданы команде по найму. Результаты теста не показываются участникам — это часть процесса оценки.</p>
+</div>
+
+</div>
+<script src="data.js"></script>
+<script src="supabase_client.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+// CANDIDATE FORM — cognitive test (timed) + self-report.
+// No scoring/interpretation shown to candidate.
+// ════════════════════════════════════════════════════════════
+
+var qp = new URLSearchParams(window.location.search);
+var TOKEN = qp.get('token') || '';
+
+var curSec = 0; // 0..7 mapping to SECTIONS_META
+var answers = { cognitive:{}, fc:{}, likert:{} };
+var candidateName = '', candidateEmail = '';
+var alreadySubmitted = false;
+var activeTimer = null;
+var taskStartTime = null;
+var currentTaskIdx = 0; // for cognitive timed sections, one task at a time
+
+window.addEventListener('DOMContentLoaded', function() {
+  if (!TOKEN) return;
+  sbSelect('submissions', { token: 'eq.' + TOKEN }, { select: 'id' })
+    .then(function(subs) {
+      if (subs && subs.length > 0) {
+        alreadySubmitted = true;
+        document.getElementById('scr-identity').innerHTML =
+          '<h1 class="id-h">Тест уже пройден</h1><p class="id-sub">Результаты по этой ссылке уже отправлены ранее.</p>';
+      }
+    }).catch(function(err){ console.warn(err.message); });
+});
+
+function startSurvey() {
+  if (alreadySubmitted) return;
+  var name = document.getElementById('inp-name').value.trim();
+  var email = document.getElementById('inp-email').value.trim();
+  var consent = document.getElementById('inp-consent').checked;
+  if (!name || !email || !consent) { document.getElementById('id-err').style.display='block'; return; }
+  candidateName = name; candidateEmail = email;
+  document.getElementById('scr-identity').style.display = 'none';
+  document.getElementById('scr-survey').style.display = 'block';
+  renderSection();
+}
+
+function updateProg() {
+  var pct = Math.round(curSec/8*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-sec').textContent = 'Раздел '+(curSec+1)+' из 8';
+  document.getElementById('btn-back').disabled = curSec===0 || curSec===1; // no going back during/after timed tasks
+}
+
+function renderSection() {
+  updateProg();
+  var meta = SECTIONS_META[curSec];
+  var data = getSectionData(curSec);
+  currentTaskIdx = 0;
+
+  if (meta.type === 'cognitive_timed' || meta.type === 'cognitive') {
+    renderCognitiveTask(meta, data);
+  } else if (meta.type === 'fc') {
+    renderFCSection(meta, data);
+  } else {
+    renderLikertSection(meta, data);
+  }
+}
+
+// ── COGNITIVE (one task at a time, with optional timer) ──
+function renderCognitiveTask(meta, tasks) {
+  var task = tasks[currentTaskIdx];
+  document.getElementById('prog-ct').textContent = (currentTaskIdx+1)+' / '+tasks.length;
+
+  var h = '<div class="sec-badge">'+meta.title+'</div><div class="sec-desc">'+meta.desc+'</div>';
+  var isTimed = meta.type === 'cognitive_timed';
+
+  if (isTimed) {
+    h += '<div class="timer-box"><div class="timer-num" id="timer-num">'+task.timeLimit+'</div><div class="timer-label">секунд осталось</div></div>';
+  }
+
+  h += '<div class="qcard" id="task-card">';
+  h += '<div class="qidx">Задание '+(currentTaskIdx+1)+' из '+tasks.length+'</div>';
+  h += '<div class="qtext">'+task.q+'</div>';
+  h += '<div class="opt-grid">';
+  task.options.forEach(function(opt, i) {
+    h += '<div class="opt-card" onclick="selectCognitive(\''+task.id+'\',\''+opt.replace(/'/g,"\\'")+'\',this)">'+opt+'</div>';
+  });
+  h += '</div></div>';
+
+  document.getElementById('sec-body').innerHTML = h;
+  document.getElementById('btn-next').style.display = 'none'; // auto-advance on selection
+  document.getElementById('btn-back').style.display = 'none';
+  document.getElementById('err-msg').style.display = 'none';
+
+  taskStartTime = Date.now();
+  if (isTimed) startTimer(task.timeLimit, task.id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startTimer(seconds, taskId) {
+  clearTimer();
+  var remaining = seconds;
+  var numEl = document.getElementById('timer-num');
+  activeTimer = setInterval(function() {
+    remaining--;
+    if (numEl) {
+      numEl.textContent = remaining;
+      if (remaining <= 5) numEl.classList.add('urgent');
+    }
+    if (remaining <= 0) {
+      clearTimer();
+      handleTimeout(taskId);
+    }
+  }, 1000);
+}
+function clearTimer() { if (activeTimer) { clearInterval(activeTimer); activeTimer = null; } }
+
+function handleTimeout(taskId) {
+  var elapsed = Date.now() - taskStartTime;
+  answers.cognitive[taskId] = { selected: null, timeMs: elapsed, timedOut: true };
+  var card = document.getElementById('task-card');
+  if (card) card.classList.add('timeout');
+  setTimeout(function() { advanceCognitive(); }, 600);
+}
+
+function selectCognitive(taskId, value, el) {
+  clearTimer();
+  var elapsed = Date.now() - taskStartTime;
+  answers.cognitive[taskId] = { selected: value, timeMs: elapsed, timedOut: false };
+  document.querySelectorAll('.opt-card').forEach(function(c){ c.classList.add('disabled'); });
+  el.classList.add('sel');
+  setTimeout(function() { advanceCognitive(); }, 350);
+}
+
+function advanceCognitive() {
+  var meta = SECTIONS_META[curSec];
+  var tasks = getSectionData(curSec);
+  currentTaskIdx++;
+  if (currentTaskIdx < tasks.length) {
+    renderCognitiveTask(meta, tasks);
+  } else {
+    document.getElementById('btn-next').style.display = '';
+    document.getElementById('btn-back').style.display = '';
+    goToNextSection();
+  }
+}
+
+// ── FORCED CHOICE SECTIONS ──
+function renderFCSection(meta, pairs) {
+  document.getElementById('btn-next').style.display = '';
+  document.getElementById('btn-back').style.display = '';
+  document.getElementById('prog-ct').textContent = pairs.length + ' вопросов';
+  var h = '<div class="sec-badge">'+meta.title+'</div><div class="sec-desc">'+meta.desc+'</div>';
+  pairs.forEach(function(p, i) {
+    var aS = answers.fc[p.id]==='a', bS = answers.fc[p.id]==='b';
+    h += '<div class="qcard'+(answers.fc[p.id]?' answered':'')+'" id="qb-'+p.id+'">';
+    h += '<div class="qidx">'+(i+1)+' / '+pairs.length+'</div>';
+    h += '<div class="fc-lbl">'+p.lbl+'</div><div class="fc-pair">';
+    h += '<div class="fc-card'+(aS?' sel':'')+'" onclick="pickFC(\''+p.id+'\',\'a\',this)"><div class="fc-letter">Вариант А</div><div class="fc-text">'+p.a.t+'</div></div>';
+    h += '<div class="fc-card'+(bS?' sel':'')+'" onclick="pickFC(\''+p.id+'\',\'b\',this)"><div class="fc-letter">Вариант Б</div><div class="fc-text">'+p.b.t+'</div></div>';
+    h += '</div></div>';
+  });
+  document.getElementById('sec-body').innerHTML = h;
+  document.getElementById('err-msg').style.display = 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function pickFC(id, ch, el) {
+  answers.fc[id] = ch;
+  var b = document.getElementById('qb-'+id);
+  if (b) { b.querySelectorAll('.fc-card').forEach(function(c){c.classList.remove('sel');}); el.classList.add('sel'); b.classList.add('answered'); }
+}
+
+// ── LIKERT SECTIONS ──
+function renderLikertSection(meta, qs) {
+  document.getElementById('btn-next').style.display = '';
+  document.getElementById('btn-back').style.display = '';
+  document.getElementById('prog-ct').textContent = qs.length + ' вопросов';
+  var h = '<div class="sec-badge">'+meta.title+'</div><div class="sec-desc">'+meta.desc+'</div>';
+  qs.forEach(function(q, i) {
+    var v = answers.likert[q.id];
+    h += '<div class="qcard'+(v?' answered':'')+'" id="qb-'+q.id+'">';
+    h += '<div class="qidx">'+(i+1)+' / '+qs.length+'</div>';
+    if (q.sc) h += '<div class="scenario"><div class="scen-tag">Ситуация</div>'+q.sc+'</div>';
+    h += '<div class="qtext" style="font-weight:400;font-size:.9rem">'+q.q+'</div><div class="likert-row">';
+    for (var k=1;k<=5;k++) {
+      h += '<label class="l-opt"><input type="radio" name="'+q.id+'" value="'+k+'"'+(v==k?' checked':'')+' onchange="saveLikert(\''+q.id+'\','+k+')"><div class="l-dot">'+k+'</div></label>';
+    }
+    h += '</div><div class="anchors"><span class="anch">Совсем не описывает</span><span class="anch r">Точно описывает</span></div></div>';
+  });
+  document.getElementById('sec-body').innerHTML = h;
+  document.getElementById('err-msg').style.display = 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function saveLikert(id, v) {
+  answers.likert[id] = v;
+  var b = document.getElementById('qb-'+id);
+  if (b) b.classList.add('answered');
+}
+
+// ── VALIDATION / NAV ──
+function validateCurrentSection() {
+  var meta = SECTIONS_META[curSec];
+  var data = getSectionData(curSec);
+  if (meta.type === 'cognitive_timed' || meta.type === 'cognitive') return true; // auto-advances
+  if (meta.type === 'fc') { for (var i=0;i<data.length;i++) if (!answers.fc[data[i].id]) return false; return true; }
+  for (var j=0;j<data.length;j++) if (!answers.likert[data[j].id]) return false;
+  return true;
+}
+
+function goNext() {
+  if (!validateCurrentSection()) { document.getElementById('err-msg').style.display='block'; return; }
+  document.getElementById('err-msg').style.display = 'none';
+  goToNextSection();
+}
+function goToNextSection() {
+  if (curSec < 7) { curSec++; renderSection(); } else { submitAndFinish(); }
+}
+function goBack() { if (curSec>1) { curSec--; renderSection(); } }
+
+// ── SUBMIT ──
+function submitAndFinish() {
+  var btn = document.getElementById('btn-next');
+  if (btn) { btn.disabled = true; btn.textContent = 'Отправка…'; }
+
+  var record = { token: TOKEN || ('anon_'+Date.now()), name: candidateName, email: candidateEmail, answers: answers };
+
+  sbInsert('submissions', record)
+    .then(function() {
+      document.getElementById('scr-survey').style.display = 'none';
+      document.getElementById('scr-done').style.display = 'block';
+      window.scrollTo({top:0,behavior:'smooth'});
+    })
+    .catch(function(err) {
+      console.error(err.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Далее →'; }
+      document.getElementById('err-msg').textContent = 'Не удалось отправить результаты — проверьте подключение и попробуйте снова.';
+      document.getElementById('err-msg').style.display = 'block';
+    });
+}
+</script>
+</body>
+</html>
